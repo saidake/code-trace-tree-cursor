@@ -32,7 +32,12 @@ def find_project_root(start: Path) -> Path:
     if cur.is_file():
         cur = cur.parent
     while True:
-        if (cur / ".idea").is_dir() or (cur / ".vscode").is_dir() or (cur / ".git").exists():
+        if (
+            (cur / ".cursor").is_dir()
+            or (cur / ".idea").is_dir()
+            or (cur / ".vscode").is_dir()
+            or (cur / ".git").exists()
+        ):
             return cur
         if cur.parent == cur:
             raise SystemExit(f"ERROR: could not locate project root from {start}")
@@ -50,7 +55,12 @@ def global_app_dir() -> Path:
 
 
 def read_project_id(project_root: Path) -> str:
-    for rel in (".idea/code-trace-tree.project.id", ".vscode/code-trace-tree.project.id"):
+    # Cursor prefer .cursor/; reuse .vscode / .idea when present (shared companions).
+    for rel in (
+        ".cursor/code-trace-tree.project.id",
+        ".vscode/code-trace-tree.project.id",
+        ".idea/code-trace-tree.project.id",
+    ):
         p = project_root / rel
         if p.is_file():
             return p.read_text(encoding="utf-8").strip()
@@ -114,22 +124,13 @@ def resolve_storage(project_root: Path) -> Path:
 
 def write_project_id_files(project_root: Path, project_id: str) -> list[Path]:
     """
-    Write the local project id for whichever IDE folders exist.
-    If neither .idea nor .vscode exists, create .vscode/.
+    Write the local project id for Cursor: `.cursor/code-trace-tree.project.id`.
+    (Read path still accepts existing `.vscode` / `.idea` ids without rewriting them.)
     """
-    targets: list[Path] = []
-    if (project_root / ".idea").is_dir():
-        targets.append(project_root / ".idea" / "code-trace-tree.project.id")
-    if (project_root / ".vscode").is_dir():
-        targets.append(project_root / ".vscode" / "code-trace-tree.project.id")
-    if not targets:
-        targets.append(project_root / ".vscode" / "code-trace-tree.project.id")
-    written: list[Path] = []
-    for path in targets:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(project_id.strip() + "\n", encoding="utf-8")
-        written.append(path)
-    return written
+    path = project_root / ".cursor" / "code-trace-tree.project.id"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(project_id.strip() + "\n", encoding="utf-8")
+    return [path]
 
 
 def create_fresh_storage(project_root: Path) -> Path:
@@ -1041,7 +1042,7 @@ def signals_dir() -> Path:
 def write_storage_ready(project_root: Path) -> Optional[Path]:
     """
     Case C bind handshake: `signals/<projectId>.storage-ready` (no TTL).
-    Open IDEs compare the filename id to `.idea`/`.vscode` project id and bind when equal.
+    Open IDEs compare the filename id to `.cursor`/`.vscode`/`.idea` project id and bind when equal.
     """
     project_id = read_project_id(project_root)
     if not project_id:

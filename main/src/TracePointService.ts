@@ -1063,7 +1063,7 @@ export class TracePointService {
 
   /**
    * Agent wrote `signals/<projectId>.storage-ready` after creating project id + XML (Case C).
-   * Bind only when that id matches `.idea`/`.vscode` `code-trace-tree.project.id`.
+   * Bind only when that id matches `.cursor`/`.vscode`/`.idea` `code-trace-tree.project.id`.
    */
   async handleStorageReadySignal(signalProjectId: string): Promise<boolean> {
     if (this.getBoundProjectId()) return true

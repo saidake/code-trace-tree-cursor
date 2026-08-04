@@ -63,7 +63,8 @@
 </ol>
 <p>
   Shares the same global storage and Agent Skill as the JetBrains and VS Code companions
-  (<code>.vscode/code-trace-tree.project.id</code>, fallback <code>.idea/code-trace-tree.project.id</code>).
+  (<code>.cursor/code-trace-tree.project.id</code>; also accepts existing
+  <code>.vscode/</code> or <code>.idea/</code> ids).
 </p>
 <h1>Agent Skill</h1>
 <p>
@@ -156,8 +157,8 @@ Add a root trace point at the login handler, then children for validation and to
   Each project uses <code>&lt;projectId&gt;.xml</code> in that folder
   (legacy <code>&lt;FolderName&gt;.xml</code> files from older releases are still resolved and
   renamed when found). The project id is stored in
-  <code>.vscode/code-trace-tree.project.id</code>
-  (falls back to <code>.idea/code-trace-tree.project.id</code>).
+  <code>.cursor/code-trace-tree.project.id</code>
+  (falls back to <code>.vscode/</code> then <code>.idea/code-trace-tree.project.id</code>).
 </p>
 <!-- Plugin description end -->
 

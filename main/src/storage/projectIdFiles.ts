@@ -7,6 +7,11 @@ import * as fs from 'fs'
 import * as path from 'path'
 import { PROJECT_ID_FILE_NAME } from '../domain/constants'
 
+/** Cursor IDE: `.cursor/code-trace-tree.project.id` */
+export function cursorIdPath(projectBase: string): string {
+  return path.join(projectBase, '.cursor', PROJECT_ID_FILE_NAME)
+}
+
 export function vscodeIdPath(projectBase: string): string {
   return path.join(projectBase, '.vscode', PROJECT_ID_FILE_NAME)
 }
@@ -26,17 +31,20 @@ function readIdFile(filePath: string): string | undefined {
 }
 
 /**
- * Prefer `.vscode/code-trace-tree.project.id`; if missing, reuse `.idea/...` when present.
+ * Prefer `.cursor/code-trace-tree.project.id`; if missing, reuse `.vscode/...`
+ * then `.idea/...` when present (shared with VS Code / JetBrains companions).
  */
 export function readProjectId(projectBase: string): string | undefined {
-  const vscodeId = readIdFile(vscodeIdPath(projectBase))
-  if (vscodeId) return vscodeId
-  return readIdFile(ideaIdPath(projectBase))
+  return (
+    readIdFile(cursorIdPath(projectBase)) ||
+    readIdFile(vscodeIdPath(projectBase)) ||
+    readIdFile(ideaIdPath(projectBase))
+  )
 }
 
-/** Write the project id only to `.vscode/` (current IDE). */
+/** Write the project id only to `.cursor/` (current IDE). */
 export function writeProjectId(projectBase: string, projectId: string): void {
-  const filePath = vscodeIdPath(projectBase)
+  const filePath = cursorIdPath(projectBase)
   fs.mkdirSync(path.dirname(filePath), { recursive: true })
   fs.writeFileSync(filePath, projectId.trim() + '\n', 'utf8')
 }

@@ -75,9 +75,9 @@ export class ProjectStorage {
     if (existingId) {
       const byId = this.findDocumentByProjectId(existingId)
       if (byId) {
-        // Ensure VS Code has its own id file when we only found the JetBrains one
-        const vscodeIdPath = ProjectIdFiles.vscodeIdPath(this.projectBase)
-        if (!fs.existsSync(vscodeIdPath)) {
+        // Ensure Cursor has its own id file when we only found .vscode / .idea
+        const cursorIdPath = ProjectIdFiles.cursorIdPath(this.projectBase)
+        if (!fs.existsSync(cursorIdPath)) {
           ProjectIdFiles.writeProjectId(this.projectBase, existingId)
         }
         const updated: ProjectDocument = {
