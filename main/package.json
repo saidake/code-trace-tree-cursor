@@ -1,0 +1,279 @@
+{
+  "name": "code-trace-tree-cursor",
+  "displayName": "Code Trace Tree for Cursor",
+  "description": "Manage code trace points in a hierarchical tree for workflow tracing.",
+  "version": "1.2.0",
+  "publisher": "CraigBrown",
+  "license": "MIT",
+  "author": "Code Trace Tree  Copyright (C) 2025-2026 Craig Brown and Code Trace Tree Contributors",
+  "homepage": "https://github.com/saidake/code-trace-tree-cursor#readme",
+  "bugs": {
+    "url": "https://github.com/saidake/code-trace-tree-cursor/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/saidake/code-trace-tree-cursor.git"
+  },
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Other",
+    "Visualization"
+  ],
+  "keywords": [
+    "code-trace-tree",
+    "trace",
+    "trace-point",
+    "workflow",
+    "navigation",
+    "tree",
+    "bookmark",
+    "code-map",
+    "highlight",
+    "agent",
+    "agent-skill",
+    "claude",
+    "cursor",
+    "productivity"
+  ],
+  "pricing": "Free",
+  "extensionKind": [
+    "workspace",
+    "ui"
+  ],
+  "icon": "assets/icons/logo.png",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "code-trace-tree-container",
+          "title": "Code Trace Tree",
+          "icon": "assets/icons/code_trace_tree_icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "code-trace-tree-container": [
+        {
+          "id": "codeTraceTree.profile",
+          "name": "Profile",
+          "type": "webview"
+        },
+        {
+          "id": "codeTraceTree.view",
+          "name": "Trace Points"
+        },
+        {
+          "id": "codeTraceTree.description",
+          "name": "Description",
+          "type": "webview"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "codeTraceTree.createRootTracePoint",
+        "title": "Create a Root Code Trace Point"
+      },
+      {
+        "command": "codeTraceTree.createTracePointUnderSelected",
+        "title": "Create Code Trace Points (Under selected)"
+      },
+      {
+        "command": "codeTraceTree.createRootPathTracePoint",
+        "title": "Create a Root File/Directory Trace Point"
+      },
+      {
+        "command": "codeTraceTree.createPathTracePointUnderSelected",
+        "title": "Create File/Directory Trace Point (Under selected)"
+      },
+      {
+        "command": "codeTraceTree.updateTracePoint",
+        "title": "Update Selected Trace Points"
+      },
+      {
+        "command": "codeTraceTree.renameTracePoint",
+        "title": "Rename Trace Point"
+      },
+      {
+        "command": "codeTraceTree.deleteTracePoints",
+        "title": "Delete Trace Points"
+      },
+      {
+        "command": "codeTraceTree.copyTracePointText",
+        "title": "Copy Trace Point Text"
+      },
+      {
+        "command": "codeTraceTree.showLineContent",
+        "title": "Show Line Content"
+      },
+      {
+        "command": "codeTraceTree.moveUp",
+        "title": "Move Up",
+        "icon": "$(arrow-up)"
+      },
+      {
+        "command": "codeTraceTree.moveDown",
+        "title": "Move Down",
+        "icon": "$(arrow-down)"
+      },
+      {
+        "command": "codeTraceTree.expandSelected",
+        "title": "Expand Selected",
+        "icon": "$(expand-all)"
+      },
+      {
+        "command": "codeTraceTree.toggleHighlights",
+        "title": "Toggle the visibility of trace point highlights in files",
+        "shortTitle": "Toggle Highlights",
+        "icon": "$(eye)"
+      },
+      {
+        "command": "codeTraceTree.toggleNamePrompt",
+        "title": "When enabled, ask for a name when creating a trace point; when disabled, create with an empty name",
+        "shortTitle": "Prompt for Name",
+        "icon": "$(edit)",
+        "enablement": "view == codeTraceTree.view"
+      },
+      {
+        "command": "codeTraceTree.exportTracePoints",
+        "title": "Export Trace Points",
+        "icon": "$(cloud-upload)"
+      },
+      {
+        "command": "codeTraceTree.importTracePoints",
+        "title": "Import Trace Points",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "codeTraceTree.goToTracePoint",
+        "title": "Go to Trace Point",
+        "icon": "$(go-to-file)"
+      },
+      {
+        "command": "codeTraceTree.goToTracePointInTree",
+        "title": "Go to the Trace Point in the tree panel"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "codeTraceTree.moveUp",
+          "group": "navigation@100",
+          "when": "view == codeTraceTree.view"
+        },
+        {
+          "command": "codeTraceTree.moveDown",
+          "group": "navigation@200",
+          "when": "view == codeTraceTree.view"
+        },
+        {
+          "command": "codeTraceTree.toggleHighlights",
+          "group": "navigation@300",
+          "when": "view == codeTraceTree.view"
+        },
+        {
+          "command": "codeTraceTree.toggleNamePrompt",
+          "group": "navigation@350",
+          "when": "view == codeTraceTree.view",
+          "toggle": "codeTraceTree.namePromptEnabled"
+        },
+        {
+          "command": "codeTraceTree.exportTracePoints",
+          "group": "navigation@400",
+          "when": "view == codeTraceTree.view"
+        },
+        {
+          "command": "codeTraceTree.importTracePoints",
+          "group": "navigation@500",
+          "when": "view == codeTraceTree.view"
+        },
+        {
+          "command": "codeTraceTree.expandSelected",
+          "group": "navigation@600",
+          "when": "view == codeTraceTree.view"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "codeTraceTree.copyTracePointText",
+          "group": "navigation@50",
+          "when": "view == codeTraceTree.view && (viewItem == traceableLine || viewItem == traceablePath)"
+        },
+        {
+          "command": "codeTraceTree.renameTracePoint",
+          "group": "navigation@100",
+          "when": "view == codeTraceTree.view && (viewItem == traceableLine || viewItem == traceablePath)"
+        },
+        {
+          "command": "codeTraceTree.deleteTracePoints",
+          "group": "navigation@200",
+          "when": "view == codeTraceTree.view && (viewItem == traceableLine || viewItem == traceablePath)"
+        },
+        {
+          "command": "codeTraceTree.showLineContent",
+          "group": "navigation@900",
+          "when": "view == codeTraceTree.view && viewItem == traceableLine"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "codeTraceTree.createRootPathTracePoint",
+          "group": "codeTraceTree@1"
+        },
+        {
+          "command": "codeTraceTree.createPathTracePointUnderSelected",
+          "group": "codeTraceTree@2"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "codeTraceTree.createRootTracePoint",
+          "group": "codeTraceTree@1"
+        },
+        {
+          "command": "codeTraceTree.createTracePointUnderSelected",
+          "group": "codeTraceTree@2"
+        },
+        {
+          "command": "codeTraceTree.updateTracePoint",
+          "group": "codeTraceTree@3"
+        },
+        {
+          "command": "codeTraceTree.goToTracePointInTree",
+          "group": "codeTraceTree@4",
+          "when": "codeTraceTree.hasTracePointAtCaret"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "codeTraceTree.copyTracePointText",
+        "key": "ctrl+c",
+        "mac": "cmd+c",
+        "when": "view == codeTraceTree.view && focusedView == codeTraceTree.view"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "yarn run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "prepare-vsix": "node ../scripts/prepare-vsix-assets.mjs",
+    "package": "yarn run prepare-vsix && npx --yes @vscode/vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "16.x",
+    "@types/vscode": "^1.80.0",
+    "typescript": "^5.1.6"
+  },
+  "dependencies": {
+    "fast-xml-parser": "^5.3.0",
+    "uuid": "^13.0.0"
+  }
+}

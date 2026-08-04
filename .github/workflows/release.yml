@@ -1,0 +1,91 @@
+# Build and Release
+#
+# Builds the VSIX and shared agent skill ZIP, attaches them to the GitHub Release.
+# Triggered on push of a git tag matching v* (e.g. v1.0.0).
+# Attachments: plugin .vsix + code-trace-tree-skill-X.Y.Z.zip
+
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: main
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: yarn
+          cache-dependency-path: main/yarn.lock
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Sync version from tag
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          yarn version --new-version "$VERSION" --no-git-tag-version
+
+      - name: Package extension
+        run: yarn run package
+
+      - name: Package agent skill ZIP
+        working-directory: .
+        run: |
+          set -euo pipefail
+          TAG="${{ github.ref_name }}"
+          VERSION="${TAG#v}"
+          mkdir -p dist/skills
+          rm -f dist/skills/code-trace-tree-skill-*.zip
+          (
+            cd skills
+            zip -r "../dist/skills/code-trace-tree-skill-${VERSION}.zip" code-trace-tree \
+              -x '*/__pycache__/*' '*.pyc' '*/.DS_Store'
+          )
+          ls -la dist/skills/
+          unzip -l "dist/skills/code-trace-tree-skill-${VERSION}.zip"
+
+      - name: Upload VSIX artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-trace-tree
+          path: main/*.vsix
+
+      - name: Upload skill artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-trace-tree-skill
+          path: dist/skills/code-trace-tree-skill-*.zip
+
+      - name: Attach artifacts to GitHub Release
+        working-directory: .
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          TAG="${{ github.ref_name }}"
+          VERSION="${TAG#v}"
+          VSIX="$(ls main/*.vsix | head -n1)"
+          SKILL_ZIP="dist/skills/code-trace-tree-skill-${VERSION}.zip"
+          TITLE="Code Trace Tree for Cursor ${TAG}"
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$VSIX" "$SKILL_ZIP" --clobber
+            gh release edit "$TAG" --title "$TITLE"
+          else
+            gh release create "$TAG" \
+              --title "$TITLE" \
+              --notes "" \
+              "$VSIX" \
+              "$SKILL_ZIP"
+          fi

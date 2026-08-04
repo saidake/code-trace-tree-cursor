@@ -1,0 +1,36 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "compile",
+      "type": "npm",
+      "script": "compile",
+      "path": "main/",
+      "problemMatcher": "$tsc",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared",
+        "showReuseMessage": false
+      }
+    },
+    {
+      "label": "watch",
+      "type": "npm",
+      "script": "watch",
+      "path": "main/",
+      "problemMatcher": "$tsc-watch",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "never",
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": false
+      },
+      "group": "build"
+    }
+  ]
+}
