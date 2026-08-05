@@ -13,7 +13,7 @@ description: >
 
 # Code Trace Tree (Cursor)
 
-Operate the hybrid storage used by **Code Trace Tree for Cursor**, then ask Cursor to reload the panel.
+Operate the hybrid storage used by **Code Trace Tree** (Cursor edition), then ask Cursor to reload the panel.
 
 ## Cursor vs other IDE skill packs
 

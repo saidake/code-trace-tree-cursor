@@ -9,7 +9,7 @@
 
 <!-- Plugin description -->
 <p>
-  Code Trace Tree is a Cursor extension that lets you trace code in a tree structure (VS Code extension API; left activity-bar panel).
+  Trace code in a tree structure.
   Double-click any trace point to navigate to its source, with support for multiple trace levels.
 </p>
 <p>
@@ -56,7 +56,7 @@
 
 <h1>Install the Extension</h1>
 <ol>
-  <li>Download <code>code-trace-tree-cursor-1.2.0.vsix</code> from the GitHub Release.</li>
+  <li>Download <code>code-trace-tree-1.2.0.vsix</code> from the GitHub Release.</li>
   <li>In Cursor: <b>Extensions</b> → <code>...</code> → <b>Install from VSIX…</b>
     (or Command Palette: <code>Extensions: Install from VSIX…</code>).</li>
   <li>Choose the downloaded <code>.vsix</code> file and reload if prompted.</li>

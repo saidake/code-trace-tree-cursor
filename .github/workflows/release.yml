@@ -77,7 +77,7 @@ jobs:
           VERSION="${TAG#v}"
           VSIX="$(ls main/*.vsix | head -n1)"
           SKILL_ZIP="dist/skills/code-trace-tree-skill-${VERSION}.zip"
-          TITLE="Code Trace Tree for Cursor ${TAG}"
+          TITLE="Code Trace Tree ${TAG}"
 
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" "$VSIX" "$SKILL_ZIP" --clobber
