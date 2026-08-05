@@ -13,10 +13,9 @@
   Double-click any trace point to navigate to its source, with support for multiple trace levels.
 </p>
 <p>
-  Pair it with the Agent Skill so Claude Code, Cursor, GitHub Copilot, Codex, or Gemini CLI can search,
-  add, move, and rebind traces, and refresh the IDE when you ask.<br/>
-  This extension does <b>not</b> include an AI agent; install your preferred agent separately, then
-  install and load the Code Trace Tree skill.
+  Includes a <b>Cursor-only</b> Agent Skill (bundled in this Cursor plugin) so Cursor Agent can
+  search, add, move, and rebind traces, and refresh the Trace Points view when you ask.
+  Cursor loads the skill automatically — you do not install it separately.
 </p>
 <!-- Plugin description end -->
 
@@ -62,7 +61,8 @@
   <li>Choose the downloaded <code>.vsix</code> file and reload if prompted.</li>
 </ol>
 <p>
-  Shares the same global storage and Agent Skill as the JetBrains and VS Code companions.
+  Shares the same global storage as the JetBrains and VS Code companions.
+  The Cursor Agent Skill is <b>bundled</b> in this Cursor plugin (Cursor-only; auto-loaded).
   The extension binds global XML by matching the workspace path.
   New projects allocate <code>&lt;ProjectFolderName&gt;.xml</code> (or <code>Name1.xml</code>, …)
   with a UUID <code>&lt;projectId&gt;</code> on first use.
@@ -70,28 +70,29 @@
   an empty-state webview explains how to create a root trace point and provides a grey
   <b>Import stored data</b> button if data is lost after moving or renaming the project.
 </p>
-<h1>Agent Skill</h1>
+<h1>Agent Skill (Cursor)</h1>
 <p>
-  This extension does <b>not</b> ship an AI agent. Install one of the supported agents first, then install
-  the Code Trace Tree skill and ensure it is <b>loaded</b> in the agent session so the agent can talk
-  to the extension.
+  The Agent Skill ships <b>inside this Cursor plugin</b>
+  (<code>.cursor-plugin/plugin.json</code> + <code>skills/code-trace-tree/</code>).
+  It is for <a href="https://cursor.com">Cursor</a> Agent only.
+  Cursor discovers and loads it automatically when relevant (or via <code>/code-trace-tree</code>).
+  Users do <b>not</b> install a skill zip or copy files into <code>~/.cursor/skills/</code>.
 </p>
-<p>Supported agents:</p>
-<ul>
-  <li><a href="https://claude.com/claude-code">Claude Code</a></li>
-  <li><a href="https://cursor.com">Cursor</a></li>
-  <li><a href="https://docs.github.com/en/copilot">GitHub Copilot</a> (agent skills)</li>
-  <li><a href="https://developers.openai.com/codex">Codex</a></li>
-  <li><a href="https://geminicli.com">Gemini CLI</a></li>
-</ul>
-<p>The skill lets the agent:</p>
+<p>
+  The VSIX adds the Trace Points editor panel; the skill is already part of the Cursor plugin.
+  Install the VSIX when you want the UI panel alongside agent-driven edits.
+</p>
+<p>The skill lets Cursor Agent:</p>
 <ul>
   <li>Resolve the bound global storage XML for the project</li>
   <li>Search, add, move, and delete trace points</li>
   <li>Rebind line locations after source edits on disk</li>
-  <li>Ask the IDE to reload / refresh extension data</li>
+  <li>Ask Cursor to reload / refresh extension data</li>
   <li>Select or navigate to nodes in the Code Trace Tree view</li>
 </ul>
+<p>
+  The skill still instructs the agent to edit traces only when you ask.
+</p>
 <p>
   <b>Python required:</b> the main skill ops (<code>trace_tree</code> search / add / move / delete / rebind)
   run <code>trace_tree.py</code>, so <b>Python 3</b> must be on your <code>PATH</code>
@@ -99,48 +100,10 @@
   Resolve / refresh / select helper scripts are plain shell or batch and do not need Python.
 </p>
 
-<h2>Install skill — extract locations</h2>
-<p>
-  Download <code>code-trace-tree-skill-1.2.1.zip</code> from the GitHub Release
-  (one zip for all agents).
-  Remove any existing <code>code-trace-tree</code> skill folder first, then extract into the
-  skills directory for your agent:
-</p>
-<table>
-  <thead>
-    <tr><th>Agent</th><th>Global</th><th>Project-local</th></tr>
-  </thead>
-  <tbody>
-    <tr><td>Claude Code</td><td><code>~/.claude/skills/</code></td><td><code>.claude/skills/</code></td></tr>
-    <tr><td>Cursor</td><td><code>~/.cursor/skills/</code></td><td><code>.cursor/skills/</code></td></tr>
-    <tr><td>GitHub Copilot</td><td><code>~/.copilot/skills/</code></td><td><code>.github/skills/</code></td></tr>
-    <tr><td>Codex</td><td><code>~/.agents/skills/</code></td><td><code>.agents/skills/</code></td></tr>
-    <tr><td>Gemini CLI</td><td><code>~/.gemini/skills/</code></td><td><code>.gemini/skills/</code></td></tr>
-  </tbody>
-</table>
-
-<h2>Install example (Claude Code, Linux &amp; macOS)</h2>
-<pre><code>curl -L https://github.com/saidake/code-trace-tree-cursor/releases/download/v1.2.1/code-trace-tree-skill-1.2.1.zip -o code-trace-tree-skill-1.2.1.zip</code>
-<code>rm -rf ~/.claude/skills/code-trace-tree</code>
-<code>mkdir -p ~/.claude/skills</code>
-<code>unzip code-trace-tree-skill-1.2.1.zip -d ~/.claude/skills/</code>
-<code>rm code-trace-tree-skill-1.2.1.zip</code>
-</pre>
-<p>Project-local: extract into <code>.claude/skills/</code> instead of <code>~/.claude/skills/</code>. For other agents, use the same zip and extract into that agent’s folder from the table above.</p>
-
-<h2>Install example (Claude Code, Windows PowerShell)</h2>
-<pre><code>Invoke-WebRequest -Uri "https://github.com/saidake/code-trace-tree-cursor/releases/download/v1.2.1/code-trace-tree-skill-1.2.1.zip" -OutFile "code-trace-tree-skill-1.2.1.zip"</code>
-<code>Remove-Item -Recurse -Force "$HOME\.claude\skills\code-trace-tree" -ErrorAction SilentlyContinue</code>
-<code>New-Item -ItemType Directory -Force -Path "$HOME\.claude\skills" | Out-Null</code>
-<code>Expand-Archive -Path "code-trace-tree-skill-1.2.1.zip" -DestinationPath "$HOME\.claude\skills" -Force</code>
-<code>Remove-Item "code-trace-tree-skill-1.2.1.zip"</code>
-</pre>
-<p>Project-local: extract into <code>.claude\skills\</code>. For Cursor / Copilot / Codex / Gemini, use the same zip and change the destination path using the table above.</p>
-
 <h2>How to use the skill</h2>
 <p>
-  After the skill is installed and <b>loaded</b> in your agent session, ask the agent in natural language.
-  Mention the skill name when your agent needs an explicit skill reference:
+  Ask Cursor Agent in natural language (the skill is already available).
+  Mention the skill when you want an explicit reference:
 </p>
 <pre><code>Skill: code-trace-tree
 Help me generate some trace point nodes related to the current topic.
@@ -172,14 +135,9 @@ Add a root trace point at the login handler, then children for validation and to
 - Open the project root in Cursor (or VS Code)
 - Install deps: `cd main && yarn install`
 - Press **F5** to launch an Extension Development Host
-- Shared agent skill source: `skills/code-trace-tree/`
+- Cursor-only agent skill source: `skills/code-trace-tree/` (bundled in the Cursor plugin; auto-loaded)
 
-## Cursor plugin (Agent skill)
-
-This repo is also a [Cursor plugin](https://cursor.com/docs/plugins.md): `.cursor-plugin/plugin.json` plus `skills/code-trace-tree/`.
-After install (Marketplace / team marketplace / local), Cursor can **auto-attach** the skill when relevant
-(or via `/code-trace-tree`). The skill still instructs the agent to edit traces only when the user asks.
-No separate skill-zip extract is required for Cursor.
+## Cursor plugin (local development)
 
 Local load for development:
 
@@ -190,8 +148,6 @@ New-Item -ItemType Junction -Force `
 ```
 
 Then **Developer: Reload Window**, and check **Customize → Skills** for `code-trace-tree`.
-
-The VSIX (editor panel) and the Cursor plugin (agent skill) are separate installs.
 
 # License
 
