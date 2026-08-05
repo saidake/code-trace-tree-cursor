@@ -75,6 +75,13 @@
         }
       ]
     },
+    "viewsWelcome": [
+      {
+        "view": "codeTraceTree.view",
+        "contents": "There are currently no trace points.\n\nRenaming or moving the project directory may cause Code Trace Tree data to be lost.\n\n[View stored data](command:codeTraceTree.viewStoredData)",
+        "when": "codeTraceTree.showEmptyState"
+      }
+    ],
     "commands": [
       {
         "command": "codeTraceTree.createRootTracePoint",
@@ -154,6 +161,10 @@
         "command": "codeTraceTree.goToTracePoint",
         "title": "Go to Trace Point",
         "icon": "$(go-to-file)"
+      },
+      {
+        "command": "codeTraceTree.viewStoredData",
+        "title": "View Stored Data"
       },
       {
         "command": "codeTraceTree.goToTracePointInTree",

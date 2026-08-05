@@ -56,12 +56,14 @@ Fallback when quotes are still awkward: distinctive substring tip + `--line` (e.
 
 | Piece | Location |
 |-------|----------|
-| Project id | `.cursor/code-trace-tree.project.id` (Cursor write); read also accepts `.vscode/` then `.idea/` |
-| Global XML | `<OS Config Dir>/code-trace-tree/<projectId>.xml` (legacy `FolderName.xml` still resolved by scanning `<projectId>`) |
+| Project id | Bound via workspace path match to global XML `<path>` / `<projectId>` |
+| Global XML | `<OS Config Dir>/code-trace-tree/` — folder-named for new projects (e.g. `MyProject.xml`); legacy `<projectId>.xml` still resolved by scanning `<projectId>` |
 | Storage-ready (Case C bind) | `<OS Config Dir>/code-trace-tree/signals/<projectId>.storage-ready` (no TTL; written by refresh scripts) |
 | Refresh signal (full) | `<OS Config Dir>/code-trace-tree/signals/<projectId>.request_refresh` (TTL 60s) |
 | Refresh signal (one profile) | `<OS Config Dir>/code-trace-tree/signals/<projectId>.request_refresh_profile` (TTL 60s; body = profile name, empty → active) |
 | Select signal | `<OS Config Dir>/code-trace-tree/signals/<projectId>.select_trace_points` (one UUID per line; TTL 60s) |
+
+**Empty tree (Cursor):** when there are no trace nodes and only the default `main` profile (or no profiles), the extension shows an empty-state tip about rename/move unbinding and a button to list stored global XML paths for import.
 
 **OS Config Dir:**
 
@@ -172,7 +174,7 @@ python "<Agent Skill Path>/code-trace-tree/scripts/trace_tree.py" search --proje
 python "<Agent Skill Path>/code-trace-tree/scripts/trace_tree.py" --project /path/to/project search
 ```
 
-Omit `--project` when the process CWD is already inside the IDE project (scripts walk upward to find `.cursor` / `.idea` / `.vscode` / `.git`).
+Omit `--project` when the process CWD is already inside the IDE project (scripts walk upward to find `.cursor` / `.vscode` / `.idea` / `.git`, or other common project markers).
 
 ```text
 # Absolute script path; do not cd into the skill folder
@@ -215,7 +217,7 @@ The IDE watches **signal files** (not the XML path). After agent edits, always w
 |--------|--------|
 | `request_refresh` | Full reload: all profiles, active profile, toolbar flags (`highlightingEnabled`, `namePromptEnabled`, `descriptionAreaOpened`). Also writes `<projectId>.storage-ready` so an open Case C IDE can bind first. |
 | `request_refresh_profile` | Reload one profile’s tree from XML into memory. Body = profile name (empty → active). Does **not** change active profile or toolbar flags. Also writes `storage-ready`. |
-| `<projectId>.storage-ready` | Case C bind handshake (no TTL). IDE compares filename id to `.cursor`/`.vscode`/`.idea` project id; on match, binds and watches global refresh/select signals. Does not create storage. |
+| `<projectId>.storage-ready` | Case C bind handshake (no TTL). Cursor binds when that projectId’s XML `<path>` matches the current workspace. Does not create storage. |
 
 ```text
 python "<Agent Skill Path>/code-trace-tree/scripts/request_refresh.py"

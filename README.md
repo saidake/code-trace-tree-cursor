@@ -62,9 +62,12 @@
   <li>Choose the downloaded <code>.vsix</code> file and reload if prompted.</li>
 </ol>
 <p>
-  Shares the same global storage and Agent Skill as the JetBrains and VS Code companions
-  (<code>.cursor/code-trace-tree.project.id</code>; also accepts existing
-  <code>.vscode/</code> or <code>.idea/</code> ids).
+  Shares the same global storage and Agent Skill as the JetBrains and VS Code companions.
+  The extension binds global XML by matching the workspace path.
+  New projects allocate <code>&lt;ProjectFolderName&gt;.xml</code> (or <code>Name1.xml</code>, …)
+  with a UUID <code>&lt;projectId&gt;</code> on first use.
+  If the tree is empty (no nodes; only the default <code>main</code> profile or no profiles),
+  an empty-state message explains rename/move risks and offers importing from stored global data.
 </p>
 <h1>Agent Skill</h1>
 <p>
@@ -154,11 +157,11 @@ Add a root trace point at the login handler, then children for validation and to
   <li>Linux: <code>$XDG_CONFIG_HOME/code-trace-tree</code> or <code>~/.config/code-trace-tree</code></li>
 </ul>
 <p>
-  Each project uses <code>&lt;projectId&gt;.xml</code> in that folder
-  (legacy <code>&lt;FolderName&gt;.xml</code> files from older releases are still resolved and
-  renamed when found). The project id is stored in
-  <code>.cursor/code-trace-tree.project.id</code>
-  (falls back to <code>.vscode/</code> then <code>.idea/code-trace-tree.project.id</code>).
+  New projects get a folder-named global XML (for example <code>MyProject.xml</code>).
+  Legacy <code>&lt;projectId&gt;.xml</code> files are still resolved by scanning XML content.
+  The extension binds that global XML by matching the workspace path.
+  If the tree is empty (no nodes; only the default <code>main</code> profile or no profiles),
+  an empty-state message explains rename/move risks and offers importing from stored global data.
 </p>
 <!-- Plugin description end -->
 

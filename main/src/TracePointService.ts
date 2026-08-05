@@ -20,8 +20,7 @@ import {
 } from './domain/types'
 import { formatLocationSuffix } from './utils/displayText'
 import * as AgentSignalFiles from './storage/agentSignalFiles'
-import { ProjectStorage } from './storage/projectStorage'
-import { readProjectId } from './storage/projectIdFiles'
+import { ProjectStorage, StoredDocumentSummary } from './storage/projectStorage'
 
 export class TracePointService {
   private static instance: TracePointService
@@ -98,6 +97,7 @@ export class TracePointService {
         await this.syncToggleContextKeys()
         await this.loadActiveProfileFromStore()
       }
+      await this.syncEmptyStateContextKey()
       this.notifyProfileListeners()
     } catch (e) {
       vscode.window.showErrorMessage(`Failed to load trace points: ${e}`)
@@ -112,7 +112,7 @@ export class TracePointService {
   }
 
   /**
-   * Create local project id + bind global XML path if this project has no storage yet.
+   * Bind global XML path if this project has no storage yet (folder-named file on first use).
    * Call before the first persist for create / profile / import / toolbar toggles.
    */
   ensureStorage(): boolean {
@@ -317,6 +317,113 @@ export class TracePointService {
     )
   }
 
+  /** True when the tree is empty and only the default main profile (or no profiles) exists. */
+  isEmptyTreeState(): boolean {
+    if (!this.isOnlyMainOrNoProfiles()) return false
+    return this.countAllTraceNodes() === 0
+  }
+
+  private isOnlyMainOrNoProfiles(): boolean {
+    if (this.profiles.length === 0) return true
+    return (
+      this.profiles.length === 1 && this.profiles[0].name === DEFAULT_PROFILE_NAME
+    )
+  }
+
+  private countAllTraceNodes(): number {
+    const countNodes = (nodes: TracePointNode[]): number => {
+      let total = nodes.length
+      for (const node of nodes) {
+        total += countNodes(node.children)
+      }
+      return total
+    }
+    return this.profiles.reduce(
+      (sum, profile) => sum + countNodes(profile.tracePointNodes),
+      0
+    )
+  }
+
+  async syncEmptyStateContextKey(): Promise<void> {
+    await vscode.commands.executeCommand(
+      'setContext',
+      'codeTraceTree.showEmptyState',
+      this.isEmptyTreeState()
+    )
+  }
+
+  listStoredGlobalSummaries(): StoredDocumentSummary[] {
+    const workspaceRoot =
+      this.workspaceRoot || vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
+    if (!workspaceRoot) return []
+    const storage = this.storage ?? new ProjectStorage(workspaceRoot)
+    return storage.listStoredSummaries()
+  }
+
+  /**
+   * Import profiles from a global XML, then bind that file to the workspace.
+   * Reuses the same import choice flows as file import.
+   */
+  async importAndBindFromStoredFile(
+    storageFile: string,
+    flows: {
+      runSingleProfileImportFlow: (
+        service: TracePointService,
+        profileName: string | undefined,
+        nodes: TracePointNode[],
+        expandedIds: string[]
+      ) => Promise<boolean>
+      runMultiProfileImportFlow: (
+        service: TracePointService,
+        activeProfileName: string | undefined,
+        profiles: TraceProfile[]
+      ) => Promise<boolean>
+    }
+  ): Promise<boolean> {
+    const workspaceRoot =
+      this.workspaceRoot || vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
+    if (!workspaceRoot) return false
+    this.workspaceRoot = workspaceRoot
+    if (!this.storage) {
+      this.storage = new ProjectStorage(workspaceRoot)
+    }
+
+    const doc = this.storage.loadDocumentFromFile(storageFile)
+    const previousFile = this.storage.getBoundStorageFile()
+    const previousId = this.storage.getBoundProjectId()
+    this.storage.adoptBinding(storageFile, doc.projectId)
+
+    let applied = false
+    if (doc.profiles.length === 1) {
+      const profile = doc.profiles[0]
+      applied = await flows.runSingleProfileImportFlow(
+        this,
+        profile.name,
+        profile.tracePointNodes,
+        profile.expandedTracePointIds
+      )
+    } else {
+      applied = await flows.runMultiProfileImportFlow(
+        this,
+        doc.activeProfileName,
+        doc.profiles
+      )
+    }
+    if (!applied) {
+      if (previousFile && previousId) {
+        this.storage.adoptBinding(previousFile, previousId)
+      } else {
+        this.storage = new ProjectStorage(workspaceRoot)
+      }
+      return false
+    }
+
+    this.storage.bindStorageFile(storageFile)
+    this.onStorageBound?.()
+    await this.syncEmptyStateContextKey()
+    return true
+  }
+
   getActiveProfileName(): string {
     return this.activeProfileName
   }
@@ -420,6 +527,7 @@ export class TracePointService {
       // Selection was cleared for the new profile; refresh the description pane so it
       // does not keep the previous profile's text.
       this.notifyListeners('update-description', null)
+      await this.syncEmptyStateContextKey()
     } finally {
       this.endIgnoreExpandEventsSoon()
     }
@@ -1062,8 +1170,8 @@ export class TracePointService {
   }
 
   /**
-   * Agent wrote `signals/<projectId>.storage-ready` after creating project id + XML (Case C).
-   * Bind only when that id matches `.cursor`/`.vscode`/`.idea` `code-trace-tree.project.id`.
+   * Agent wrote `signals/<projectId>.storage-ready` after creating global XML (Case C).
+   * Bind when that XML's {@link path} matches the current workspace.
    */
   async handleStorageReadySignal(signalProjectId: string): Promise<boolean> {
     if (this.getBoundProjectId()) return true
@@ -1072,17 +1180,14 @@ export class TracePointService {
     if (!workspaceRoot) return false
     this.workspaceRoot = workspaceRoot
 
-    const localId = readProjectId(workspaceRoot)
-    if (!localId || localId !== signalProjectId) return false
-
     const storage = this.storage ?? new ProjectStorage(workspaceRoot)
     this.storage = storage
-    const doc = storage.resolveAndLoad()
+    const doc = storage.tryBindFromSignal(signalProjectId)
     if (!doc) return false
-    if (storage.getBoundProjectId() !== signalProjectId) return false
     this.suppressPersist = true
     try {
       await this.applyDocument(doc)
+      await this.syncEmptyStateContextKey()
       this.notifyProfileListeners()
     } finally {
       this.suppressPersist = false
@@ -1097,6 +1202,7 @@ export class TracePointService {
     this.suppressPersist = true
     try {
       await this.applyDocument(doc)
+      await this.syncEmptyStateContextKey()
       this.notifyProfileListeners()
       // Leave the refresh signal for other IDE windows; TTL cleans it up.
     } finally {
