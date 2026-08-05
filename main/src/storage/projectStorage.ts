@@ -143,12 +143,13 @@ export class ProjectStorage {
     return updated
   }
 
-  /** Summaries for every readable global XML (empty-state recovery list). */
+  /** Summaries for global XMLs that contain at least one trace point (any profile). */
   listStoredSummaries(): StoredDocumentSummary[] {
     const summaries: StoredDocumentSummary[] = []
     for (const file of this.listProjectXmlFiles()) {
       try {
         const doc = parseProjectFile(file)
+        if (!documentHasTracePoints(doc)) continue
         summaries.push({
           storageFile: file,
           storedPath: doc.path,
@@ -283,4 +284,8 @@ export class ProjectStorage {
       return process.platform === 'win32' ? p.toLowerCase() : p
     }
   }
+}
+
+function documentHasTracePoints(doc: ProjectDocument): boolean {
+  return doc.profiles.some((profile) => profile.tracePointNodes.length > 0)
 }

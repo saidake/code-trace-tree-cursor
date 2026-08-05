@@ -66,7 +66,14 @@
         },
         {
           "id": "codeTraceTree.view",
-          "name": "Trace Points"
+          "name": "Trace Points",
+          "when": "!codeTraceTree.showEmptyState"
+        },
+        {
+          "id": "codeTraceTree.empty",
+          "name": "Trace Points",
+          "type": "webview",
+          "when": "codeTraceTree.showEmptyState"
         },
         {
           "id": "codeTraceTree.description",
@@ -75,13 +82,6 @@
         }
       ]
     },
-    "viewsWelcome": [
-      {
-        "view": "codeTraceTree.view",
-        "contents": "There are currently no trace points.\n\nRenaming or moving the project directory may cause Code Trace Tree data to be lost.\n\n[View stored data](command:codeTraceTree.viewStoredData)",
-        "when": "codeTraceTree.showEmptyState"
-      }
-    ],
     "commands": [
       {
         "command": "codeTraceTree.createRootTracePoint",
@@ -164,7 +164,7 @@
       },
       {
         "command": "codeTraceTree.viewStoredData",
-        "title": "View Stored Data"
+        "title": "Import Stored Data"
       },
       {
         "command": "codeTraceTree.goToTracePointInTree",

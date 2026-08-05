@@ -25,15 +25,14 @@ export function registerViewStoredData(
     vscode.commands.registerCommand('codeTraceTree.viewStoredData', async () => {
       const summaries = service.listStoredGlobalSummaries()
       if (summaries.length === 0) {
-        vscode.window.showInformationMessage('No stored Code Trace Tree data found.')
+        vscode.window.showInformationMessage('No stored Code Trace Tree data with trace points found.')
         return
       }
 
       const picked = await vscode.window.showQuickPick(
         summaries.map((s) => ({
-          label: s.storedPath || s.storageFile,
+          label: s.storedPath || '(no path)',
           description: `Updated ${formatUpdatedAt(s.updatedAt)}`,
-          detail: s.storageFile,
           summary: s
         })),
         {
