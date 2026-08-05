@@ -315,6 +315,7 @@ export class TracePointService {
       'codeTraceTree.namePromptEnabled',
       this._namePromptEnabled
     )
+    await this.syncEmptyStateContextKey()
   }
 
   /** True when the tree is empty and only the default main profile (or no profiles) exists. */
@@ -438,6 +439,7 @@ export class TracePointService {
 
   private notifyProfileListeners() {
     this.profileListeners.forEach((listener) => listener())
+    void this.syncEmptyStateContextKey()
   }
 
   /** Copy working tree + expand ids back into the active TraceProfile. */
@@ -716,6 +718,7 @@ export class TracePointService {
     nodes: Set<TracePointNode | null> | null = null
   ) {
     this.listenersMap.get(eventType)?.forEach((listener) => listener(nodes))
+    void this.syncEmptyStateContextKey()
   }
 
   async addTracePoint(
