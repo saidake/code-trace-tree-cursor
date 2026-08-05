@@ -1,43 +1,46 @@
 ---
 name: code-trace-tree
 description: >
-  Read, edit, and refresh Code Trace Tree plugin data (JetBrains / VS Code shared storage).
+  Read, edit, and refresh Code Trace Tree data in Cursor (shared global storage with VS Code / JetBrains).
   Use when the user asks to add/update/remove trace points (line, file, or directory), inspect or
-  modify Code Trace Tree profiles, sync agent-written traces into the IDE, notify IntelliJ IDEA
-  to reload plugin data, or select/navigate to trace points in the IDE tree.
+  modify Code Trace Tree profiles, sync agent-written traces into Cursor, request a panel reload,
+  or select/navigate to trace points in the Code Trace Tree view.
   Prefer scripts/trace_tree.py for search/add/move/delete/rebind (flexible LINE tips; no occurrence args; idempotent add).
   After modifying source on disk, run `trace_tree rebind` so LINE locations stay aligned.
   Only edit traces when the user explicitly asks. Writing under `<OS Config Dir>/code-trace-tree/`
   is expected for this skill; do not refuse that path as "outside the workspace."
 ---
 
-# Code Trace Tree
+# Code Trace Tree (Cursor)
 
-Operate the hybrid storage used by the Code Trace Tree IDE plugins, then ask the IDE to reload.
+Operate the hybrid storage used by **Code Trace Tree for Cursor**, then ask Cursor to reload the panel.
 
-Only edit or sync traces when the user explicitly asks (for example: generate topic-related
-nodes, add a tip at a line, rebind after edits). Do not auto-sync every turn.
+## Cursor vs other IDE skill packs
+
+This skill is the **Cursor** edition (shipped as a Cursor plugin via `.cursor-plugin/plugin.json`).
+
+- Cursor may **auto-attach** this skill when the chat matches the description (Customize → Skills → Agent Decides), or the user may invoke `/code-trace-tree`.
+- Auto-attach does **not** mean auto-edit: only mutate or refresh traces when the user **explicitly asks** (e.g. generate topic-related nodes, add a tip, rebind after edits). Do not auto-sync every turn.
+- JetBrains / VS Code skill zips are separate installs; they do not use this Cursor plugin bundle.
 
 ## Skill scripts location
 
-Helper scripts live under `<Agent Skill Path>/code-trace-tree/scripts/`.
+Helper scripts live under `<Skill Root>/scripts/` (same folder as this `SKILL.md`).
 
-**Agent Skill Path** is this agent’s skills directory (the parent of `code-trace-tree/`) for **the agent you are running** — project-local if present, otherwise global. It ends at `skills`, not at `code-trace-tree`.
+**Skill Root** is the installed `code-trace-tree` skill directory. Prefer, in order:
 
-| Agent | Global Agent Skill Path | Project-local Agent Skill Path |
-|-------|-------------------------|--------------------------------|
-| Claude Code | `~/.claude/skills` | `<repo>/.claude/skills` |
-| Cursor | `~/.cursor/skills` | `<repo>/.cursor/skills` |
-| GitHub Copilot | `~/.copilot/skills` | `<repo>/.github/skills` |
-| Codex | `~/.agents/skills` | `<repo>/.agents/skills` |
-| Gemini CLI | `~/.gemini/skills` | `<repo>/.gemini/skills` |
+1. This skill’s own directory (Cursor plugin install — resolve from the loaded skill / plugin path)
+2. Project-local: `<repo>/.cursor/skills/code-trace-tree`
+3. User global: `~/.cursor/skills/code-trace-tree`
 
-On Windows, `~` is `%USERPROFILE%`. Resolve **Agent Skill Path** once per session, then invoke scripts with absolute paths via `python` (or `python3` if that is what is on PATH). Keep the process CWD in the IDE project (do not `cd` into the skill folder).
+On Windows, `~` is `%USERPROFILE%`. Resolve **Skill Root** once per session, then invoke scripts with absolute paths via `python` (or `python3` if that is what is on PATH). Keep the process CWD in the IDE project (do not `cd` into the skill folder).
 
 ```text
-# Example — substitute the absolute Agent Skill Path for THIS agent:
-python "<Agent Skill Path>/code-trace-tree/scripts/request_refresh.py"
+# Example — substitute the absolute Skill Root:
+python "<Skill Root>/scripts/request_refresh.py"
 ```
+
+In the rest of this file, `<Agent Skill Path>/code-trace-tree` means the same as `<Skill Root>`.
 
 ### Windows PowerShell quoting
 

@@ -169,6 +169,25 @@ Add a root trace point at the login handler, then children for validation and to
 - Press **F5** to launch an Extension Development Host
 - Shared agent skill source: `skills/code-trace-tree/`
 
+## Cursor plugin (Agent skill)
+
+This repo is also a [Cursor plugin](https://cursor.com/docs/plugins.md): `.cursor-plugin/plugin.json` plus `skills/code-trace-tree/`.
+After install (Marketplace / team marketplace / local), Cursor can **auto-attach** the skill when relevant
+(or via `/code-trace-tree`). The skill still instructs the agent to edit traces only when the user asks.
+No separate skill-zip extract is required for Cursor.
+
+Local load for development:
+
+```powershell
+New-Item -ItemType Junction -Force `
+  -Path "$env:USERPROFILE\.cursor\plugins\local\code-trace-tree" `
+  -Target "C:\Users\saidake\Desktop\DevProjects\code-trace-tree-cursor"
+```
+
+Then **Developer: Reload Window**, and check **Customize → Skills** for `code-trace-tree`.
+
+The VSIX (editor panel) and the Cursor plugin (agent skill) are separate installs.
+
 # License
 
 This project is licensed under the [MIT License](./LICENSE).
