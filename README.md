@@ -67,8 +67,10 @@
   New projects allocate <code>&lt;ProjectFolderName&gt;.xml</code> (or <code>Name1.xml</code>, …)
   with a UUID <code>&lt;projectId&gt;</code> on first use.
   If the tree is empty (no nodes; only the default <code>main</code> profile or no profiles),
-  an empty-state webview explains how to create a root trace point and provides a grey
-  <b>Import stored data</b> button if data is lost after moving or renaming the project.
+  an empty-state webview explains how to create a root trace point. Recover UI (grey
+  <b>Import stored data</b> after move/rename) appears only when another stored global
+  project still has a trace point. Clearing this workspace’s tree (including delete-all)
+  does not keep recover UI visible for the bound file while it is empty.
 </p>
 <h1>Agent Skill (Cursor)</h1>
 <p>
@@ -125,8 +127,10 @@ Add a root trace point at the login handler, then children for validation and to
   Legacy <code>&lt;projectId&gt;.xml</code> files are still resolved by scanning XML content.
   The extension binds that global XML by matching the workspace path.
   If the tree is empty (no nodes; only the default <code>main</code> profile or no profiles),
-  an empty-state webview explains how to create a root trace point and provides a grey
-  <b>Import stored data</b> button if data is lost after moving or renaming the project.
+  an empty-state webview explains how to create a root trace point. Recover UI (grey
+  <b>Import stored data</b> after move/rename) appears only when another stored global
+  project still has a trace point. Clearing this workspace’s tree (including delete-all)
+  does not keep recover UI visible for the bound file while it is empty.
 </p>
 <!-- Plugin description end -->
 
