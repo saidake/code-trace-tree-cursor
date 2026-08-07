@@ -1,6 +1,6 @@
 {
   "name": "code-trace-tree",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Agent skill for Code Trace Tree: search, add, move, delete, and rebind traces; refresh Cursor via shared storage signals.",
   "author": {
     "name": "Craig Brown"
