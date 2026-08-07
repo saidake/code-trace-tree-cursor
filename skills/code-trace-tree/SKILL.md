@@ -13,7 +13,8 @@ description: >
 
 # Code Trace Tree (Cursor)
 
-Operate the hybrid storage used by **Code Trace Tree** (Cursor edition), then ask Cursor to reload the panel.
+Build and display code workflows as nested trees of line, file, and directory
+trace points. Operate the hybrid storage used by **Code Trace Tree** (Cursor edition), then ask Cursor to reload the panel.
 
 ## Cursor vs other IDE skill packs
 
