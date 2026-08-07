@@ -16,7 +16,9 @@ import {
   ProfileListener,
   TracePoint,
   TracePointNode,
-  TraceProfile
+  TraceProfile,
+  AdvancedSettings,
+  defaultAdvancedSettings
 } from './domain/types'
 import { formatLocationSuffix } from './utils/displayText'
 import * as AgentSignalFiles from './storage/agentSignalFiles'
@@ -38,6 +40,7 @@ export class TracePointService {
   private _highlightingEnabled: boolean = true
   private _descriptionAreaOpened: boolean = false
   private _namePromptEnabled: boolean = true
+  private _advancedSettings: AdvancedSettings = defaultAdvancedSettings()
   private ignoreExternalChangesUntilMs = 0
   private suppressPersist = false
   private workspaceRoot: string | undefined
@@ -136,6 +139,7 @@ export class TracePointService {
     highlightingEnabled: boolean
     descriptionAreaOpened: boolean
     namePromptEnabled: boolean
+    advancedSettings?: AdvancedSettings
   }) {
     this.profiles = doc.profiles.map((p) => ({
       name: p.name || DEFAULT_PROFILE_NAME,
@@ -154,6 +158,9 @@ export class TracePointService {
     this._highlightingEnabled = doc.highlightingEnabled
     this._descriptionAreaOpened = doc.descriptionAreaOpened
     this._namePromptEnabled = doc.namePromptEnabled
+    this._advancedSettings = doc.advancedSettings
+      ? { ...doc.advancedSettings }
+      : defaultAdvancedSettings()
     await this.syncToggleContextKeys()
     await this.loadActiveProfileFromStore()
   }
@@ -179,7 +186,8 @@ export class TracePointService {
       this.activeProfileName,
       this._descriptionAreaOpened,
       this._highlightingEnabled,
-      this._namePromptEnabled
+      this._namePromptEnabled,
+      this._advancedSettings
     )
   }
 
