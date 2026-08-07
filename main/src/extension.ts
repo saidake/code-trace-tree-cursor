@@ -22,10 +22,7 @@ import { registerExportTracePoints } from './commands/exportTracePoints'
 import { registerImportTracePoints } from './commands/importTracePoints'
 import { registerViewStoredData } from './commands/viewStoredData'
 import { registerGoToTracePoint } from './commands/goToTracePoint'
-import {
-  registerGoToTracePointInTree,
-  updateTracePointAtCaretContext
-} from './commands/goToTracePointInTree'
+import { registerGoToTracePointInTree } from './commands/goToTracePointInTree'
 import { registerRenameTracePoint } from './commands/renameTracePoint'
 import { registerDeleteTracePoints } from './commands/deleteTracePoints'
 import { registerCopyTracePointText } from './commands/copyTracePointText'
@@ -121,23 +118,19 @@ export function activate(context: vscode.ExtensionContext) {
   registerShowLineContent(context, service, treeView)
 
   service.loadState().then(() => {
-    updateTracePointAtCaretContext(service)
     emptyProvider.refresh()
     startExternalWatcher(context)
   })
   service.setOnStorageBound(() => startExternalWatcher(context))
 
   context.subscriptions.push(
-    vscode.window.onDidChangeActiveTextEditor(() => updateTracePointAtCaretContext(service)),
     vscode.window.onDidChangeVisibleTextEditors(() => {
       service.applyHighlightsToAllEditors()
     }),
     vscode.window.onDidChangeActiveColorTheme(() => {
       service.applyHighlightsToAllEditors()
-    }),
-    vscode.window.onDidChangeTextEditorSelection(() => updateTracePointAtCaretContext(service))
+    })
   )
-  service.addNodeListener('refresh', () => updateTracePointAtCaretContext(service))
   service.addProfileListener(() => emptyProvider.refresh())
 
   context.subscriptions.push(

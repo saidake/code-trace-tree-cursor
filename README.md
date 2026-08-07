@@ -35,7 +35,7 @@
       <li><b>Create a Root Code Trace Point</b> — start a new line-level trace tree</li>
       <li><b>Create Code Trace Points (Under selected)</b> — add a child under the selected node(s) in the tree (parent expands automatically)</li>
       <li><b>Update Selected Trace Points</b> — move the selected tree node(s) to the current line</li>
-      <li><b>Go to the Trace Point in the tree panel</b> — shown when the current line is a highlighted trace point; selects and reveals that node in the tree</li>
+      <li><b>Go to the Trace Point in the tree panel (Only matching)</b> — selects and reveals matching node(s) for the current line; does nothing when none match</li>
     </ul>
   </li>
   <li>In the <b>Explorer</b>, right-click a file or directory and choose:
@@ -57,7 +57,7 @@
 
 <h1>Install the Extension</h1>
 <ol>
-  <li>Download <code>code-trace-tree-1.2.3.vsix</code> from the GitHub Release.</li>
+  <li>Download <code>code-trace-tree-1.2.4.vsix</code> from the GitHub Release.</li>
   <li>In Cursor: <b>Extensions</b> → <code>...</code> → <b>Install from VSIX…</b>
     (or Command Palette: <code>Extensions: Install from VSIX…</code>).</li>
   <li>Choose the downloaded <code>.vsix</code> file and reload if prompted.</li>
