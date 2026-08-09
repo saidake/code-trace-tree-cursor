@@ -130,12 +130,21 @@ export class ProjectStorage {
   }
 
   /**
-   * Bind when a storage-ready signal's projectId matches XML whose path equals the workspace.
+   * Bind when a storage-ready signal's projectId matches this workspace.
+   * @param pathAlreadyChecked when true, skip XML `<path>` compare (signal body already matched).
    */
-  tryBindFromSignal(signalProjectId: string): ProjectDocument | undefined {
+  tryBindFromSignal(
+    signalProjectId: string,
+    pathAlreadyChecked = false
+  ): ProjectDocument | undefined {
     const doc = this.findDocumentByProjectId(signalProjectId)
     if (!doc?.storageFile) return undefined
-    if (this.normalizePath(doc.path) !== this.normalizePath(this.projectBase)) return undefined
+    if (
+      !pathAlreadyChecked &&
+      this.normalizePath(doc.path) !== this.normalizePath(this.projectBase)
+    ) {
+      return undefined
+    }
 
     const updated: ProjectDocument = {
       ...doc,
@@ -280,6 +289,11 @@ export class ProjectStorage {
       }
     }
     return matches
+  }
+
+  pathsMatch(storedPath: string, workspacePath?: string): boolean {
+    const target = workspacePath ?? this.projectBase
+    return this.normalizePath(storedPath) === this.normalizePath(target)
   }
 
   private normalizePath(p: string): string {

@@ -89,12 +89,17 @@ export class TracePointService {
     try {
       const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
       if (!workspaceRoot) {
-        vscode.window.showWarningMessage('Code Trace Tree: open a workspace folder to persist data.')
+        this.workspaceRoot = undefined
+        this.storage = undefined
+        await this.syncWorkspaceFolderContextKey()
+        await vscode.commands.executeCommand('setContext', 'codeTraceTree.showEmptyState', true)
+        this.notifyProfileListeners()
         return
       }
 
       this.workspaceRoot = workspaceRoot
       this.storage = new ProjectStorage(workspaceRoot)
+      await this.syncWorkspaceFolderContextKey()
       const doc = this.storage.resolveAndLoad()
       if (doc) {
         await this.applyDocument(doc)
@@ -379,6 +384,14 @@ export class TracePointService {
     return this.profiles.reduce(
       (sum, profile) => sum + countNodes(profile.tracePointNodes),
       0
+    )
+  }
+
+  async syncWorkspaceFolderContextKey(): Promise<void> {
+    await vscode.commands.executeCommand(
+      'setContext',
+      'codeTraceTree.hasWorkspaceFolder',
+      !!vscode.workspace.workspaceFolders?.[0]
     )
   }
 
@@ -776,18 +789,19 @@ export class TracePointService {
     lineNumber: number,
     parentId?: string,
     description = ''
-  ) {
+  ): Promise<string | undefined> {
     this.ensureStorage()
     const document = await vscode.workspace.openTextDocument(file)
     const lineContent = document.lineAt(lineNumber - 1).text.trim()
     if (!lineContent) {
-      return
+      return undefined
     }
     const [totalOccurrences, matchingLines] = this.getLineOccurrences(document, lineContent)
     const occurrenceIndex = matchingLines.indexOf(lineNumber) + 1
 
     const tracePath = vscode.workspace.asRelativePath(file)
     const baseName = path.basename(tracePath)
+    const id = uuidv4()
     const tracePoint: TracePoint = {
       traceName: name,
       traceType: 'LINE',
@@ -801,10 +815,8 @@ export class TracePointService {
       occurrenceIndex,
       description
     }
-    this.insertTracePointNode(
-      { id: uuidv4(), tracePoint, parentId, children: [] },
-      parentId
-    )
+    this.insertTracePointNode({ id, tracePoint, parentId, children: [] }, parentId)
+    return id
   }
 
   /** Adds a FILE or DIRECTORY trace point from Explorer (no line anchor). */
@@ -813,11 +825,12 @@ export class TracePointService {
     uri: vscode.Uri,
     parentId?: string,
     description = ''
-  ) {
+  ): Promise<string | undefined> {
     this.ensureStorage()
     const stat = await vscode.workspace.fs.stat(uri)
     const isDir = (stat.type & vscode.FileType.Directory) !== 0
     const tracePath = vscode.workspace.asRelativePath(uri)
+    const id = uuidv4()
     const tracePoint: TracePoint = {
       traceName: name,
       traceType: isDir ? 'DIRECTORY' : 'FILE',
@@ -831,10 +844,8 @@ export class TracePointService {
       occurrenceIndex: 0,
       description
     }
-    this.insertTracePointNode(
-      { id: uuidv4(), tracePoint, parentId, children: [] },
-      parentId
-    )
+    this.insertTracePointNode({ id, tracePoint, parentId, children: [] }, parentId)
+    return id
   }
 
   private insertTracePointNode(newNode: TracePointNode, parentId?: string) {
@@ -1223,7 +1234,7 @@ export class TracePointService {
 
   /**
    * Agent wrote `signals/<projectId>.storage-ready` after creating global XML (Case C).
-   * Bind when that XML's {@link path} matches the current workspace.
+   * Prefer path from the signal body; fall back to XML `<path>` for legacy signals.
    */
   async handleStorageReadySignal(signalProjectId: string): Promise<boolean> {
     if (this.getBoundProjectId()) return true
@@ -1234,7 +1245,28 @@ export class TracePointService {
 
     const storage = this.storage ?? new ProjectStorage(workspaceRoot)
     this.storage = storage
-    const doc = storage.tryBindFromSignal(signalProjectId)
+
+    const signalPath = AgentSignalFiles.readStorageReadyProjectPath(signalProjectId)
+    if (signalPath) {
+      if (!storage.pathsMatch(signalPath, workspaceRoot)) return true
+      const doc = storage.tryBindFromSignal(signalProjectId, true)
+      if (!doc) return false
+      this.suppressPersist = true
+      try {
+        await this.applyDocument(doc)
+        await this.syncEmptyStateContextKey()
+        this.notifyProfileListeners()
+      } finally {
+        this.suppressPersist = false
+      }
+      return true
+    }
+
+    // Legacy signal body: filter/bind using XML `<path>`.
+    const found = storage.findDocumentByProjectId(signalProjectId)
+    if (!found) return false
+    if (!storage.pathsMatch(found.path, workspaceRoot)) return true
+    const doc = storage.tryBindFromSignal(signalProjectId, true)
     if (!doc) return false
     this.suppressPersist = true
     try {
@@ -1482,6 +1514,37 @@ export class TracePointService {
     }
   }
 
+  /**
+   * Select and reveal nodes in the Trace Points tree without navigating to source.
+   * Keeps editor focus by default ({@code focus: false}).
+   */
+  async selectTracePointsInTree(
+    treeView: vscode.TreeView<vscode.TreeItem>,
+    ids: string[],
+    options?: { focus?: boolean }
+  ): Promise<void> {
+    if (ids.length === 0) return
+    const focus = options?.focus ?? false
+    await this.syncEmptyStateContextKey()
+    this.selectTracePoints(ids)
+    for (const id of ids) {
+      const item = this.getTreeNodeById(id)
+      if (!item) continue
+      try {
+        await treeView.reveal(item, { expand: true, select: false, focus: false })
+      } catch {
+        // Tree view may be hidden or disposed
+      }
+    }
+    const first = this.getTreeNodeById(ids[0])
+    if (!first) return
+    try {
+      await treeView.reveal(first, { expand: true, select: true, focus })
+    } catch {
+      // Tree view may be hidden or disposed
+    }
+  }
+
   updateInFileNodesMap(prevFilePath: string, node: TracePointNode) {
     if (prevFilePath == node.tracePoint.tracePath) return
     // Remove the node from the previous node list
@@ -1521,8 +1584,9 @@ export class TracePointService {
     item.contextValue = tracePoint.traceType === 'LINE' ? 'traceableLine' : 'traceablePath'
     // VS Code renders description after the label with a space
     item.description = location
+    // Activation uses double-click to jump; single-click only selects (see activateTracePoint).
     item.command = {
-      command: 'codeTraceTree.goToTracePoint',
+      command: 'codeTraceTree.activateTracePoint',
       title: 'Go to Trace Point',
       arguments: [item]
     }
