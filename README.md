@@ -44,7 +44,7 @@
       <li><b>Create File/Directory Trace Point (Under selected)</b> — add that file/directory under the selected tree node(s) (parent expands automatically)</li>
     </ul>
   </li>
-  <li>Single-click a node to select it; double-click to jump to that location (line, file, or Explorer for directories).</li>
+  <li>Single-click a node to select it; double-click to jump to that location (line, file, or Explorer for directories). Expand/collapse with the twistie only — jumping does not collapse the row. Hover a truncated row to see the full title.</li>
   <li>Right-click a node and choose <b>Copy Trace Point Text</b> to copy its display text, e.g. <code>test233 (TestControllerWebFlux.java:54)</code>.</li>
   <li>Right-click a line trace point and choose <b>Show Line Content</b> to view its saved trimmed line text.</li>
   <li>Use the view title-bar actions to expand/collapse, reorder, highlight, prompt for name on create, import/export, or edit descriptions. Drag a node onto another to reparent it (the target expands automatically).</li>
@@ -57,7 +57,7 @@
 
 <h1>Install the Extension</h1>
 <ol>
-  <li>Download <code>code-trace-tree-1.2.5.vsix</code> from the GitHub Release.</li>
+  <li>Download <code>code-trace-tree-1.2.6.vsix</code> from the GitHub Release.</li>
   <li>In Cursor: <b>Extensions</b> → <code>...</code> → <b>Install from VSIX…</b>
     (or Command Palette: <code>Extensions: Install from VSIX…</code>).</li>
   <li>Choose the downloaded <code>.vsix</code> file and reload if prompted.</li>
