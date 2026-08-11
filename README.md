@@ -110,6 +110,12 @@
   Ask Cursor Agent in natural language (the skill is already available).
   Mention the skill when you want an explicit reference:
 </p>
+<p>
+  <b>Windows PowerShell:</b> call <code>python …/trace_tree.py</code> directly (or
+  <code>cmd /c</code>); never name a helper parameter <code>$Args</code>. Use
+  <code>--%</code> when <code>--content</code> has quotes. Prefer ASCII names if the
+  console is not UTF-8; set <code>$env:PYTHONIOENCODING = "utf-8"</code> if needed.
+</p>
 <pre><code>Skill: code-trace-tree
 Help me generate some trace point nodes related to the current topic.
 </code></pre>
