@@ -65,15 +65,6 @@
 <p>
   Shares the same global storage as the JetBrains and VS Code companions.
   The Cursor Agent Skill is <b>bundled</b> in this Cursor plugin (Cursor-only; auto-loaded).
-  The extension binds global XML by matching the workspace path.
-  New projects allocate <code>&lt;ProjectFolderName&gt;.xml</code> (or <code>Name1.xml</code>, …)
-  with a UUID <code>&lt;projectId&gt;</code> on first use.
-  Without a workspace folder, the empty panel asks you to open one (Profile / Description /
-  toolbar stay hidden). If the tree is empty (no nodes; only the default <code>main</code>
-  profile or no profiles), an empty-state webview explains how to create a root trace point.
-  Recover UI (grey <b>Import stored data</b> after move/rename) appears only when another
-  stored global project still has a trace point. Clearing this workspace’s tree (including
-  delete-all) does not keep recover UI visible for the bound file while it is empty.
 </p>
 <h1>Agent Skill (Cursor)</h1>
 <p>
@@ -131,19 +122,21 @@ Add a root trace point at the login handler, then children for validation and to
   <li>macOS: <code>~/Library/Application Support/code-trace-tree</code></li>
   <li>Linux: <code>$XDG_CONFIG_HOME/code-trace-tree</code> or <code>~/.config/code-trace-tree</code></li>
 </ul>
-<p>
-  New projects get a folder-named global XML (for example <code>MyProject.xml</code>).
-  Legacy <code>&lt;projectId&gt;.xml</code> files are still resolved by scanning XML content.
-  The extension binds that global XML by matching the workspace path (path mode).
-  Agents Case C create that global XML without <code>.idea/code-trace-tree.project.id</code>
-  (IDE-agnostic).
-  Without a workspace folder, the empty panel asks you to open one (Profile / Description /
-  toolbar stay hidden). If the tree is empty (no nodes; only the default <code>main</code>
-  profile or no profiles), an empty-state webview explains how to create a root trace point.
-  Recover UI (grey <b>Import stored data</b> after move/rename) appears only when another
-  stored global project still has a trace point. Clearing this workspace’s tree (including
-  delete-all) does not keep recover UI visible for the bound file while it is empty.
-</p>
+<ul>
+  <li><b>Binding:</b> each workspace matches a global XML by <code>&lt;path&gt;</code> (path mode).</li>
+  <li><b>New projects:</b> allocate a folder-named global XML (for example <code>MyProject.xml</code>,
+    or <code>Name1.xml</code>, …) with a UUID <code>&lt;projectId&gt;</code> on first use.</li>
+  <li><b>Agents (Case C):</b> create that global XML without
+    <code>.idea/code-trace-tree.project.id</code> (IDE-agnostic).</li>
+  <li><b>Legacy:</b> <code>&lt;projectId&gt;.xml</code> files are still resolved by scanning XML content.</li>
+  <li><b>No workspace:</b> the empty panel asks you to open one
+    (Profile / Description / toolbar stay hidden).</li>
+  <li><b>Empty tree:</b> an empty-state webview explains how to create a root trace point
+    (no nodes; only the default <code>main</code> profile or no profiles).</li>
+  <li><b>Recover UI:</b> grey <b>Import stored data</b> after move/rename appears only when another
+    stored global project still has a trace point. Clearing this workspace’s tree (including
+    delete-all) does not keep recover UI visible for the bound file while it is empty.</li>
+</ul>
 <!-- Plugin description end -->
 
 # Development

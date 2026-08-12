@@ -120,12 +120,16 @@ python "<Agent Skill Path>/code-trace-tree/scripts/init_storage.py"
 
 ## Preferred code workflow format
 
-* When generating a code workflow, trace points with parent-child relationships should follow a clear nesting structure.
-  For example, if the parent node represents a method, its direct child nodes should represent methods called within that method, and their direct child nodes should point to the corresponding method definitions.
+* When generating a code workflow, nest by call flow: start from an entry method definition; under it put the calls made inside that method; under each call nest further calls made inside the callee (siblings for fan-out). Prefer call nesting over inserting a separate definition node for every hop.
+
   Example:
-       method A definition
-         - method B call
-           - method B definition
+
+  ```text
+  method A definition
+    - method B call
+      - method C call  (inside B)
+      - method D call  (inside B)
+  ```
 
 * Keep trace point names simple and concise. Add descriptions only when additional context is needed.
 * Prefer **LINE** anchors whose trimmed text is **unique (or rare) in that file**. Avoid generic lines such as `}`, `return;`, or blank-looking braces. Occurrence index is how the plugin and `rebind` restore a line after it moves; duplicate content in the same file makes rebinding fragile.
@@ -192,7 +196,7 @@ Bare strings inside `--parent` JSON are **UUIDs only**, not `traceName` labels. 
 ```text
 method A def
   method B call
-    method B def   ← add with --parent-id idA --parent-id idB
+    method C call   ← add with --parent-id idA --parent-id idB
 ```
 
 **CLI shape:** `python "<Agent Skill Path>/code-trace-tree/scripts/trace_tree.py" <subcommand> [flags…]`  
