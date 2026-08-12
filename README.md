@@ -17,7 +17,7 @@
 <p>
   Includes a <b>Cursor-only</b> Agent Skill (bundled in this Cursor plugin) so Cursor Agent can
   search, add, move, and rebind traces, and refresh the Trace Points view when you ask.
-  Cursor loads the skill automatically — you do not install it separately.
+  Cursor <b>auto-loads</b> the skill when relevant — you do not install it separately.
 </p>
 <!-- Plugin description end -->
 
@@ -71,7 +71,7 @@
   The Agent Skill ships <b>inside this Cursor plugin</b>
   (<code>.cursor-plugin/plugin.json</code> + <code>skills/code-trace-tree/</code>).
   It is for <a href="https://cursor.com">Cursor</a> Agent only.
-  Cursor discovers and loads it automatically when relevant (or via <code>/code-trace-tree</code>).
+  Cursor <b>auto-loads</b> it when relevant (or via <code>/code-trace-tree</code>).
   Users do <b>not</b> install a skill zip or copy files into <code>~/.cursor/skills/</code>.
 </p>
 <p>
@@ -98,21 +98,13 @@
 
 <h2>How to use the skill</h2>
 <p>
-  Ask Cursor Agent in natural language (the skill is already available).
-  Mention the skill when you want an explicit reference:
+  In <b>Cursor</b>, keep the Trace Points view open for the same project: it loads the agent’s
+  trace point changes in real time (no manual reload).
 </p>
-<p>
-  <b>Windows PowerShell:</b> call <code>python …/trace_tree.py</code> directly (or
-  <code>cmd /c</code>); never name a helper parameter <code>$Args</code>. Use
-  <code>--%</code> when <code>--content</code> has quotes. Prefer ASCII names if the
-  console is not UTF-8; set <code>$env:PYTHONIOENCODING = "utf-8"</code> if needed.
-</p>
-<pre><code>Skill: code-trace-tree
-Help me generate some trace point nodes related to the current topic.
+<p>Examples:</p>
+<pre><code>Help me generate some trace point nodes related to the current topic.
 </code></pre>
-<p>Other examples:</p>
-<pre><code>Skill: code-trace-tree
-Add a root trace point at the login handler, then children for validation and token issue.
+<pre><code>Add a root trace point at the login handler, then children for validation and token issue.
 </code></pre>
 
 <h1>Storage</h1>
