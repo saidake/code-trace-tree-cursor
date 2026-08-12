@@ -57,7 +57,7 @@
 
 <h1>Install the Extension</h1>
 <ol>
-  <li>Download <code>code-trace-tree-1.2.7.vsix</code> from the GitHub Release.</li>
+  <li>Download <code>code-trace-tree-1.2.8.vsix</code> from the GitHub Release.</li>
   <li>In Cursor: <b>Extensions</b> → <code>...</code> → <b>Install from VSIX…</b>
     (or Command Palette: <code>Extensions: Install from VSIX…</code>).</li>
   <li>Choose the downloaded <code>.vsix</code> file and reload if prompted.</li>
