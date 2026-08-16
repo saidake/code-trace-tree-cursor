@@ -214,6 +214,9 @@ function startExternalWatcher(
       void service.handleExternalProfileRefreshRequest()
     },
     () => {
+      void service.handleExternalSettingsRefreshRequest()
+    },
+    () => {
       void service.handleExternalSelectRequest(treeView)
     }
   )

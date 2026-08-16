@@ -62,6 +62,10 @@ export class TracePointService {
   private static readonly PATH_VALIDITY_DEBOUNCE_MS = 350
   private pathTraceWatchers: vscode.Disposable[] = []
   private watchedPathTraceKey = ''
+  /** After persist, notify peer IDEs (debounced with schedulePersist). */
+  private pendingPeerProfileRefresh = false
+  private pendingPeerSettingsRefresh = false
+  private pendingPeerFullRefresh = false
   /** Ignore TreeView expand/collapse while rebuilding after a profile switch. */
   private ignoreExpandEvents = false
   private ignoreExpandTimer: ReturnType<typeof setTimeout> | undefined
@@ -192,6 +196,24 @@ export class TracePointService {
     this.persistTimer = setTimeout(() => this.persistNow(), 300)
   }
 
+  /** Persist and ask peers to reload this profile's tree. */
+  scheduleStructurePersist() {
+    this.pendingPeerProfileRefresh = true
+    this.schedulePersist()
+  }
+
+  /** Persist and ask peers to reload project settings / active profile. */
+  scheduleSettingsPersist() {
+    this.pendingPeerSettingsRefresh = true
+    this.schedulePersist()
+  }
+
+  /** Persist and ask peers for a full storage reload. */
+  scheduleFullPeerPersist() {
+    this.pendingPeerFullRefresh = true
+    this.schedulePersist()
+  }
+
   /** Flush active profile into the profile store and write global XML. */
   persistNow() {
     if (this.suppressPersist) return
@@ -209,11 +231,39 @@ export class TracePointService {
       this._namePromptEnabled,
       this._advancedSettings
     )
+    this.emitPendingPeerSignals()
+  }
+
+  private emitPendingPeerSignals() {
+    const projectId = this.getBoundProjectId()
+    const root = this.workspaceRoot
+    const full = this.pendingPeerFullRefresh
+    const profile = this.pendingPeerProfileRefresh
+    const settings = this.pendingPeerSettingsRefresh
+    this.pendingPeerFullRefresh = false
+    this.pendingPeerProfileRefresh = false
+    this.pendingPeerSettingsRefresh = false
+    if (!projectId) return
+    if (full) {
+      AgentSignalFiles.writeRequestRefresh(projectId, root)
+      return
+    }
+    if (profile) {
+      AgentSignalFiles.writeRequestRefreshProfile(projectId, this.activeProfileName, root)
+    }
+    if (settings) {
+      AgentSignalFiles.writeRequestRefreshSettings(projectId, root)
+    }
   }
 
   /** @deprecated Prefer schedulePersist — kept for call-site compatibility during refactor. */
   saveState() {
     this.schedulePersist()
+  }
+
+  /** Structure mutation helper (add/delete/move/reparent). */
+  saveStructureState() {
+    this.scheduleStructurePersist()
   }
 
   getTracePointNodes(): TracePointNode[] {
@@ -313,7 +363,7 @@ export class TracePointService {
     this.ensureStorage()
     this._highlightingEnabled = enabled
     this.applyHighlightsToAllEditors()
-    this.schedulePersist()
+    this.scheduleSettingsPersist()
   }
 
   getAdvancedSettings(): AdvancedSettings {
@@ -329,7 +379,7 @@ export class TracePointService {
         normalizeHighlightHex(settings.highlightLineBackgroundDark) ?? DEFAULT_HIGHLIGHT_DARK
     }
     this.applyHighlightsToAllEditors()
-    this.schedulePersist()
+    this.scheduleSettingsPersist()
   }
 
   /** Theme-aware highlight fill from advanced settings. */
@@ -349,7 +399,7 @@ export class TracePointService {
   setDescriptionAreaOpened(opened: boolean) {
     this.ensureStorage()
     this._descriptionAreaOpened = opened
-    this.schedulePersist()
+    this.scheduleSettingsPersist()
   }
 
   isNamePromptEnabled(): boolean {
@@ -360,7 +410,7 @@ export class TracePointService {
     this.ensureStorage()
     this._namePromptEnabled = enabled
     void this.syncToggleContextKeys()
-    this.schedulePersist()
+    this.scheduleSettingsPersist()
   }
 
   private async syncToggleContextKeys() {
@@ -624,7 +674,7 @@ export class TracePointService {
     this.activeProfileName = name
     await this.loadActiveProfileFromStore()
     this.notifyProfileListeners()
-    this.schedulePersist()
+    this.scheduleFullPeerPersist()
   }
 
   async addProfile(name: string): Promise<boolean> {
@@ -641,7 +691,7 @@ export class TracePointService {
     this.activeProfileName = trimmed
     await this.loadActiveProfileFromStore()
     this.notifyProfileListeners()
-    this.schedulePersist()
+    this.scheduleFullPeerPersist()
     return true
   }
 
@@ -655,7 +705,7 @@ export class TracePointService {
       await this.loadActiveProfileFromStore()
     }
     this.notifyProfileListeners()
-    this.schedulePersist()
+    this.scheduleFullPeerPersist()
     return true
   }
 
@@ -673,7 +723,7 @@ export class TracePointService {
     this.syncActiveProfileToStore()
     this.notifyListeners()
     this.notifyListeners('update-description', null)
-    this.schedulePersist()
+    this.scheduleStructurePersist()
   }
 
   /** Snapshot every profile (active tree is synced first). */
@@ -712,7 +762,7 @@ export class TracePointService {
     this.activeProfileName = name
     await this.loadActiveProfileFromStore()
     this.notifyProfileListeners()
-    this.schedulePersist()
+    this.scheduleFullPeerPersist()
     return name
   }
 
@@ -733,7 +783,7 @@ export class TracePointService {
     this.activeProfileName = created[0]
     await this.loadActiveProfileFromStore()
     this.notifyProfileListeners()
-    this.schedulePersist()
+    this.scheduleFullPeerPersist()
     return created
   }
 
@@ -767,7 +817,7 @@ export class TracePointService {
     }
     await this.loadActiveProfileFromStore()
     this.notifyProfileListeners()
-    this.schedulePersist()
+    this.scheduleFullPeerPersist()
   }
 
   async replaceAllProfiles(imported: TraceProfile[], preferredActiveName?: string) {
@@ -784,7 +834,7 @@ export class TracePointService {
         : this.profiles[0].name
     await this.loadActiveProfileFromStore()
     this.notifyProfileListeners()
-    this.schedulePersist()
+    this.scheduleFullPeerPersist()
   }
 
   addNodeListener(eventType: NodeListenerEventType, listener: NodeListener) {
@@ -922,7 +972,7 @@ export class TracePointService {
       this.updateTreeItem(tp)
       const parentNode = this.getTracePointParentById(id)
       this.notifyListeners('refresh', new Set<TracePointNode | null>([parentNode]))
-      this.saveState()
+      this.saveStructureState()
     }
   }
 
@@ -1176,19 +1226,16 @@ export class TracePointService {
   }
 
   /**
-   * Recheck all LINE / FILE / DIRECTORY nodes against the project.
-   * Uses open editor documents when present. Does not reload XML.
-   * Persists only if LINE line/occurrence fields moved.
+   * Reload bound XML, then recheck all LINE / FILE / DIRECTORY nodes.
    */
   async recheckAllTracePoints(): Promise<void> {
-    const before = this.persistedLineSnapshot()
-    await this.validateTracePointsOnLoad()
-    this.rebuildTreeNodeMap()
+    const reloaded = await this.reloadFromExternalStorage('recheck', true)
+    if (!reloaded) {
+      await this.validateTracePointsOnLoad()
+      this.rebuildTreeNodeMap()
+    }
     this.applyHighlightsToAllEditors()
     this.notifyListeners()
-    if (this.persistedLineSnapshot() !== before) {
-      this.schedulePersist()
-    }
   }
 
   private persistedLineSnapshot(): string {
@@ -1615,6 +1662,47 @@ export class TracePointService {
   }
 
   /**
+   * Reloads project toolbar flags, advancedSettings, and activeProfileName from XML.
+   * Does not replace other profile trees unless the active profile name changed.
+   */
+  async reloadSettingsFromExternalStorage(bypassIgnoreWindow = false): Promise<boolean> {
+    if (!bypassIgnoreWindow && this.shouldIgnoreExternalChanges()) return false
+    const doc = this.storage?.reloadBoundDocument()
+    if (!doc) return false
+    this.suppressPersist = true
+    try {
+      const prevActive = this.activeProfileName
+      this.activeProfileName = doc.activeProfileName || DEFAULT_PROFILE_NAME
+      this._descriptionAreaOpened = !!doc.descriptionAreaOpened
+      this._highlightingEnabled = doc.highlightingEnabled !== false
+      this._namePromptEnabled = doc.namePromptEnabled !== false
+      this._advancedSettings = doc.advancedSettings
+        ? { ...doc.advancedSettings }
+        : defaultAdvancedSettings()
+      await this.syncToggleContextKeys()
+      if (prevActive !== this.activeProfileName) {
+        await this.loadActiveProfileFromStore()
+        this.notifyProfileListeners()
+      } else {
+        this.applyHighlightsToAllEditors()
+        this.notifyListeners('update-description', null)
+      }
+    } finally {
+      this.suppressPersist = false
+    }
+    return true
+  }
+
+  /** Handles `<projectId>.request_refresh_settings`. */
+  async handleExternalSettingsRefreshRequest(): Promise<void> {
+    const projectId = this.getBoundProjectId()
+    if (!projectId) return
+    const requestPath = AgentSignalFiles.refreshSettingsPath(projectId)
+    if (!AgentSignalFiles.isFresh(requestPath)) return
+    await this.reloadSettingsFromExternalStorage(true)
+  }
+
+  /**
    * Selects / reveals trace points listed in the global select signal
    * (`signals/<projectId>.select_trace_points`, one UUID per line).
    * TTL-stale files are ignored; fresh signals are left for other windows.
@@ -1799,7 +1887,7 @@ export class TracePointService {
       this.expandTreeItem(affectedParentNode)
     }
     this.notifyListeners('refresh', affectedParentNodes)
-    await this.saveState()
+    await this.saveStructureState()
   }
 
   expandTreeItem(tracePointNode: TracePointNode | null) {
