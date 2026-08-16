@@ -45,9 +45,9 @@
     </ul>
   </li>
   <li>Single-click a node to select it; double-click to jump to that location (line, file, or Explorer for folders). Double-click restores the prior expand/collapse state if the host toggled it (brief flicker possible).</li>
-  <li>Right-click a node and choose <b>Copy Trace Point Text</b> to copy its display text, e.g. <code>test233 (TestControllerWebFlux.java:54)</code>.</li>
+  <li>Right-click a node and choose <b>Copy Label</b> to copy its display text, e.g. <code>test233 (TestControllerWebFlux.java:54)</code>.</li>
   <li>Right-click a line trace point and choose <b>Show Line Content</b> to view its saved trimmed line text.</li>
-  <li>Use the view title-bar actions to expand/collapse, recheck traces, reorder, highlight, prompt for name on create, import/export, or edit descriptions. Drag a node onto another to reparent it (the target expands automatically).</li>
+  <li>Use the view title-bar actions to expand/collapse, <b>Recheck Trace Availability</b>, <b>Remove Invalid Trace Points</b>, reorder, highlight, prompt for name on create, or edit descriptions. Import/Export live under <b>Advanced Settings</b>. Drag a node onto another to reparent it (the target expands automatically).</li>
 </ol>
 <p>
   <b>TIPS:</b> Prefer creating line trace points on text that is <b>unique in that file</b> (or uncommon),
@@ -59,7 +59,7 @@
 
 <h1>Install the Extension</h1>
 <ol>
-  <li>Download <code>code-trace-tree-1.2.8.vsix</code> from the GitHub Release.</li>
+  <li>Download <code>code-trace-tree-1.2.9.vsix</code> from the GitHub Release.</li>
   <li>In Cursor: <b>Extensions</b> → <code>...</code> → <b>Install from VSIX…</b>
     (or Command Palette: <code>Extensions: Install from VSIX…</code>).</li>
   <li>Choose the downloaded <code>.vsix</code> file and reload if prompted.</li>
