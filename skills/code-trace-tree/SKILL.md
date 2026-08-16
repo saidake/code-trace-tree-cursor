@@ -1,4 +1,4 @@
-﻿---
+---
 name: code-trace-tree
 description: >
   Read, edit, and refresh Code Trace Tree data in Cursor (shared global storage with VS Code / JetBrains).
